@@ -93,6 +93,49 @@
                 logWindow.innerHTML = "エラーが発生しました: " + error;
             }
         }
+        async function loadHistory() {
+    const list = document.getElementById('history-list');
+    list.innerHTML = "読み込み中...";
+
+    try {
+        // Java で作った @GetMapping("/history") を叩く
+        const response = await fetch('/api/history');
+        const history = await response.json();
+
+        list.innerHTML = ""; // 表示をクリア
+        
+        // 最新の 5 件を表示（新しい順にしたい場合は reverse() を使う）
+        history.reverse().slice(0, 5).forEach(item => {
+            const li = document.createElement('li');
+            li.className = 'log-entry'; // 既存のスタイルを流用
+            
+            // 日付を読みやすく整形
+            const date = new Date(item.createdAt).toLocaleString();
+            
+            li.innerHTML = `
+                <span style="color: #888;">[${date}]</span><br>
+                <strong>${item.enemyName}</strong> との戦闘 
+                → <span style="color: ${item.winner === '勇者' ? '#00ff00' : '#ff4500'}">勝者: ${item.winner}</span>
+            `;
+            list.appendChild(li);
+        });
+
+        if (history.length === 0) {
+            list.innerHTML = "まだ戦績はありません。";
+        }
+    } catch (error) {
+        list.innerHTML = "履歴の取得に失敗しました: " + error;
+    }
+}
+
+// ページを開いた時にも自動で読み込む
+window.onload = loadHistory;
     </script>
+    <hr style="margin-top: 40px; border: 1px double #444;">
+<h2>📜 過去の戦績（データベースから取得）</h2>
+<button onclick="loadHistory()" style="background-color: #2e8b57; border-color: #3cb371;">履歴を更新</button>
+
+<ul id="history-list" style="text-align: left; max-width: 600px; margin: 20px auto; list-style: none; padding: 0;">
+    </ul>
 </body>
 </html>

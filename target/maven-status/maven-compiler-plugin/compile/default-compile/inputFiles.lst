@@ -1,3 +1,4 @@
+C:\Users\user\Desktop\GitHub\JavaRPG\src\main\java\com\rpg\models\BattleLog.java
 C:\Users\user\Desktop\GitHub\JavaRPG\src\main\java\com\rpg\models\enemies\Enemy.java
 C:\Users\user\Desktop\GitHub\JavaRPG\src\main\java\com\rpg\models\enemies\Slime.java
 C:\Users\user\Desktop\GitHub\JavaRPG\src\main\java\com\rpg\models\BaseCharacter.java
@@ -13,6 +14,7 @@ C:\Users\user\Desktop\GitHub\JavaRPG\src\main\java\com\rpg\engine\BattleManager.
 C:\Users\user\Desktop\GitHub\JavaRPG\src\main\java\com\rpg\models\enemies\GreatGoblin.java
 C:\Users\user\Desktop\GitHub\JavaRPG\src\main\java\com\rpg\models\ActionResult.java
 C:\Users\user\Desktop\GitHub\JavaRPG\src\main\java\com\rpg\models\players\Player.java
+C:\Users\user\Desktop\GitHub\JavaRPG\src\main\java\com\rpg\repository\BattleLogRepository.java
 C:\Users\user\Desktop\GitHub\JavaRPG\src\main\java\com\rpg\models\players\Mage.java
 C:\Users\user\Desktop\GitHub\JavaRPG\src\main\java\com\rpg\models\players\Swordsman.java
 C:\Users\user\Desktop\GitHub\JavaRPG\src\main\java\com\rpg\models\Character.java

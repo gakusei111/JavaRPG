@@ -1,4 +1,5 @@
 com\rpg\models\enemies\Goblin.class
+com\rpg\repository\BattleLogRepository.class
 com\rpg\models\enemies\GreatGoblin.class
 com\rpg\models\players\Player.class
 com\rpg\models\Attacker.class
@@ -15,5 +16,6 @@ com\rpg\controllers\GameController.class
 com\rpg\models\enemies\Enemy.class
 com\rpg\RpgApiApplication.class
 com\rpg\models\players\Swordsman.class
+com\rpg\models\BattleLog.class
 com\rpg\models\ActionResult.class
 com\rpg\models\players\Healer.class
