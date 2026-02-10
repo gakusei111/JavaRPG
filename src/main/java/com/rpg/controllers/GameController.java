@@ -16,7 +16,7 @@ import java.util.List;
 @RequestMapping("/api")
 public class GameController {
 
-    @Autowired // Spring Bootが勝手にRepositoryを用意してくれます
+    @Autowired // Spring Bootが勝手にRepositoryを用意する
     private BattleLogRepository repository;
 
     @GetMapping("/battle")

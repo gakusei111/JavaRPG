@@ -3,7 +3,6 @@ com\rpg\repository\BattleLogRepository.class
 com\rpg\models\enemies\GreatGoblin.class
 com\rpg\models\players\Player.class
 com\rpg\models\Attacker.class
-com\rpg\Main.class
 com\rpg\models\BaseCharacter.class
 com\rpg\models\enemies\Slime.class
 com\rpg\models\enemies\Dragon.class

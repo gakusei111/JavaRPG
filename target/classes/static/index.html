@@ -63,6 +63,11 @@
     
     <div>
         <input type="text" id="playerName" placeholder="勇者の名前を入力" value="勇者">
+        <select id="playerJob" style="padding: 10px; font-size: 16px;">
+    <option value="hero">勇者</option>
+    <option value="warrior">戦士</option>
+    <option value="wizard">魔法使い</option>
+</select>
         <button onclick="startBattle()">冒険に出る！</button>
     </div>
 
@@ -132,7 +137,7 @@
 window.onload = loadHistory;
     </script>
     <hr style="margin-top: 40px; border: 1px double #444;">
-<h2>📜 過去の戦績（データベースから取得）</h2>
+<h2>過去の戦績（データベースから取得）</h2>
 <button onclick="loadHistory()" style="background-color: #2e8b57; border-color: #3cb371;">履歴を更新</button>
 
 <ul id="history-list" style="text-align: left; max-width: 600px; margin: 20px auto; list-style: none; padding: 0;">
