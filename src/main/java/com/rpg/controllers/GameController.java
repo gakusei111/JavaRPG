@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 @RestController
 @RequestMapping("/api")
@@ -24,7 +25,15 @@ public class GameController {
         // ... (パーティー作成などのコードはそのまま) ...
         List<Player> party = new ArrayList<>();
         party.add(new Swordsman(name));
-        Enemy enemy = new Dragon();
+        
+        Enemy enemy;
+        Random random = new Random();
+        if (random.nextBoolean()) { // 50%の確率
+            enemy = new Slime();   // 弱い
+        } else {
+            enemy = new Goblin();  // ちょっと強い
+        }
+
 
         BattleManager manager = new BattleManager();
         manager.startBattle(party, enemy);

@@ -17,13 +17,40 @@ public class BattleManager {
 
 public void startBattle(List<Player> party, Enemy enemy) {
     battleLogs.clear();
-    addLog("⚔️ " + enemy.getName() + " との戦闘開始！");
+    //勇者の取得
+    Player hero = party.get(0);
 
-    // テスト用に1回だけ攻撃させてみる
-    if (!party.isEmpty()) {
-        Player hero = party.get(0);
-        addLog(hero.getName() + " の会心の一撃！");
-        addLog(enemy.getName() + " を倒した！");
+    addLog("⚔️ " + enemy.getName() + " を発見！！");
+    addLog(hero.getName() + " が戦闘に突入した！");
+    
+    // 戦闘ループ
+    int turn = 1;
+
+    while (hero.isAlive() && enemy.isAlive()) {
+        addLog("【ターン" + turn + "】 -------------------");
+
+        //勇者の攻撃
+        ActionResult heroAction = hero.attack(enemy);
+        addLog(heroAction.getFullLog());
+
+        if (!enemy.isAlive()) {
+            addLog(enemy.getName() + " を倒した！");
+            addLog("勝者: " + hero.getName());
+            break;
+        }
+
+        //敵の攻撃
+        ActionResult enemyAction = enemy.attack(hero);
+        addLog(enemyAction.getFullLog());
+
+        if (!hero.isAlive()) {
+            addLog(hero.getName() + " は力尽きた...");
+            addLog("勝者: " + enemy.getName());
+            break;
+        }
+
+        addLog("");
+        turn++;
     }
 }
 
