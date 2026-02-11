@@ -61,30 +61,55 @@
 <body>
     <h1>⚔️ Java RPG Battle ⚔️</h1>
     
+
     <div>
-        <input type="text" id="playerName" placeholder="勇者の名前を入力" value="勇者">
-        <select id="playerJob" style="padding: 10px; font-size: 16px;">
-    <option value="hero">勇者</option>
-    <option value="warrior">戦士</option>
-    <option value="wizard">魔法使い</option>
-</select>
-        <button onclick="startBattle()">冒険に出る！</button>
-    </div>
+    <label>勇者: <input type="text" id="playerName" value="勇者" size="10"></label>
+    <select id="job1">
+        <option value="Swordsman">剣士</option>
+        <option value="Mage">魔法使い</option>
+        <option value="Healer">ヒーラー</option>
+        <option value="Knight">騎士</option>
+    </select>
+    <br>
+    <label>仲間A: 
+        <select id="job2">
+            <option value="Swordsman">剣士</option>
+            <option value="Mage" selected>魔法使い</option>
+            <option value="Healer">ヒーラー</option>
+            <option value="Knight">騎士</option>
+        </select>
+    </label>
+    <br>
+    <label>仲間B: 
+        <select id="job3">
+            <option value="Swordsman">剣士</option>
+            <option value="Mage">魔法使い</option>
+            <option value="Healer" selected>ヒーラー</option>
+            <option value="Knight">騎士</option>
+        </select>
+    </label>
+    <button onclick="startBattle()">冒険に出る！</button>
+</div>
+
 
     <div id="log-window">
         <div class="log-entry">冒険の準備が整いました。</div>
     </div>
 
-    <script>
-        async function startBattle() {
-            const name = document.getElementById('playerName').value;
-            const logWindow = document.getElementById('log-window');
-            logWindow.innerHTML = "戦闘開始中...";
+<script>
+    async function startBattle() {
+        const name = document.getElementById('playerName').value;
+        const job1 = document.getElementById('job1').value;
+        const job2 = document.getElementById('job2').value;
+        const job3 = document.getElementById('job3').value;
 
-            try {
-                // JavaのAPIを叩く（注文を出す）
-                const response = await fetch(`/api/battle?name=${name}`);
-                const logs = await response.json(); // JSONとして受け取る
+        const logWindow = document.getElementById('log-window');
+        logWindow.innerHTML = "戦闘開始中...";
+
+        try {
+            // 3つの職業をクエリパラメータで送る
+            const response = await fetch(`/api/battle?name=${name}&job1=${job1}&job2=${job2}&job3=${job3}`);
+            const logs = await response.json();
 
                 // 画面をリセットしてログを表示
                 logWindow.innerHTML = "";

@@ -21,11 +21,19 @@ public class GameController {
     private BattleLogRepository repository;
 
     @GetMapping("/battle")
-    public List<String> startBattle(@RequestParam(defaultValue = "ゲスト") String name) {
-        // ... (パーティー作成などのコードはそのまま) ...
+    public List<String> startBattle(
+@RequestParam(defaultValue = "勇者") String name,
+            @RequestParam(defaultValue = "Swordsman") String job1, // 主人公のジョブ
+            @RequestParam(defaultValue = "Mage") String job2,      // 仲間A
+            @RequestParam(defaultValue = "Healer") String job3     // 仲間B
+    ) {
         List<Player> party = new ArrayList<>();
-        party.add(new Swordsman(name));
-        
+
+        // ジョブに応じたプレイヤーを作成するヘルパーメソッド
+        party.add(createPlayer(name, job1));
+        party.add(createPlayer("仲間A", job2));
+        party.add(createPlayer("仲間B", job3));
+
         Enemy enemy;
         Random random = new Random();
         if (random.nextBoolean()) { // 50%の確率
@@ -38,13 +46,27 @@ public class GameController {
         BattleManager manager = new BattleManager();
         manager.startBattle(party, enemy);
 
-        // ★★★ ここでDBに保存！ ★★★
-        String winner = party.get(0).isAlive() ? name : enemy.getName();
+// 結果保存（勝利判定：パーティの誰か一人でも生きていれば勝ち）
+        boolean isWin = party.stream().anyMatch(p -> p.isAlive());
+        String winner = isWin ? "勇者一行" : enemy.getName();
+        
         BattleLog log = new BattleLog(enemy.getName(), winner);
-        repository.save(log); // INSERT INTO BattleLog ... が実行される！
+        repository.save(log);
 
         return manager.getBattleLogs();
     }
+
+    // 文字列からクラスを作る便利メソッド（ファクトリーメソッド）
+    private Player createPlayer(String name, String job) {
+        switch (job) {
+            case "Mage": return new Mage(name);
+            case "Healer": return new Healer(name);
+            case "Knight": return new Knight(name);
+            case "Swordsman": 
+            default: return new Swordsman(name);
+        }
+    }
+
     
     // ★ 保存された履歴を見るための新しいURL
     @GetMapping("/history")
