@@ -2,170 +2,259 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>Java RPG Web Edition</title>
-<style>
-        /* 全体の背景を「冒険っぽい」色に */
+    <title>Java RPG - Hybrid Edition</title>
+    <style>
+        /* === 基本設定（ダークテーマ） === */
         body { 
             background-color: #202028; 
             color: #fff; 
-            font-family: 'Courier New', sans-serif; /* 等幅フォントでレトロ感 */
-            text-align: center; 
+            font-family: 'Verdana', sans-serif; 
+            margin: 0;
+            /* 初期状態：画面ど真ん中に要素を置く設定 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden; /* セットアップ中はスクロール禁止 */
+            transition: all 0.5s ease;
         }
 
-        /* ログウィンドウを「RPGのメッセージ枠」風に */
-        #log-window { 
-            background: #000; 
-            border: 4px double #fff; /* 二重線で高級感 */
-            border-radius: 8px;      /* 角を丸く */
-            width: 80%; 
-            max-width: 600px;        /* 広がりすぎないように */
-            height: 300px; 
-            margin: 20px auto; 
-            overflow-y: scroll; 
-            padding: 20px; 
+        /* === 戦闘モード用のボディ設定（JSで付与） === */
+        body.battle-mode {
+            display: block; /* 中央揃え解除 */
+            padding: 40px;
+            overflow-y: auto; /* スクロール解禁 */
+            height: auto;
+            text-align: center;
+        }
+
+        /* === セットアップ用のカードデザイン === */
+        .stage-card {
+            background: #2d2d38;
+            border: 2px solid #555;
+            border-radius: 12px;
+            width: 400px;
+            padding: 40px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.6);
+            display: none;
+            animation: slideIn 0.5s ease;
+        }
+        .active { display: block; }
+
+        /* === 入力フォームのデザイン === */
+        h2 { color: #ffcc00; margin-bottom: 20px; }
+        p { color: #aaa; margin-bottom: 30px; }
+        label { display: block; text-align: left; margin-bottom: 8px; font-weight: bold; }
+        
+        input, select {
+            width: 100%; padding: 12px; margin-bottom: 25px;
+            background: #111; color: #fff; border: 1px solid #444; border-radius: 6px;
+            font-size: 16px; box-sizing: border-box;
+        }
+
+        /* === ボタン === */
+        button {
+            background-color: #007bff; color: white; border: none;
+            padding: 15px 0; width: 100%; font-size: 18px;
+            border-radius: 6px; cursor: pointer; transition: 0.2s;
+        }
+        button:hover { background-color: #0056b3; }
+        .btn-battle { background-color: #d62828; }
+        .btn-battle:hover { background-color: #a01d1d; }
+
+        /* === ステージ4（戦闘＆履歴画面）のデザイン === */
+        #stage-4 {
+            display: none;
+            max-width: 800px;
+            margin: 0 auto; /* 横幅いっぱいにならず中央に寄せる */
+        }
+
+        /* ログウィンドウ */
+        #log-window {
+            background: #000;
+            border: 4px double #fff;
+            border-radius: 8px;
+            height: 300px;
+            padding: 20px;
+            overflow-y: scroll;
             text-align: left;
-            font-size: 16px;
-            box-shadow: 0 0 15px rgba(0, 255, 0, 0.2); /* ほんのり光らせる */
+            font-family: 'Courier New', monospace;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
+            margin-bottom: 30px;
+        }
+        .log-entry { margin-bottom: 5px; border-bottom: 1px dashed #333; }
+
+        /* 履歴リストのデザイン */
+        #history-section {
+            background: #2d2d38;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            text-align: left;
+        }
+        #history-list {
+            list-style: none;
+            padding: 0;
+        }
+        #history-list li {
+            padding: 10px;
+            border-bottom: 1px solid #444;
         }
 
-        /* 1行ごとの演出 */
-        .log-entry { 
-            margin-bottom: 8px; 
-            border-bottom: 1px dashed #444; 
-            padding-bottom: 4px; 
-            animation: fadeIn 0.5s ease-in; /* ふわっと表示させるアニメーション */
-        }
-
-        /* ボタンのデザイン */
-        button { 
-            background-color: #8b0000; /* 暗めの赤 */
-            color: white; 
-            border: 2px solid #ff4500; 
-            padding: 10px 30px; 
-            font-size: 18px; 
-            font-weight: bold;
-            cursor: pointer; 
-            transition: 0.3s;
-        }
-        button:hover {
-            background-color: #ff4500; /* マウスを乗せると明るくなる */
-        }
-
-        /* アニメーションの定義 */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
+        /* アニメーション */
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
-    <h1>⚔️ Java RPG Battle ⚔️</h1>
-    
 
-    <div>
-    <label>勇者: <input type="text" id="playerName" value="勇者" size="10"></label>
-    <select id="job1">
-        <option value="Swordsman">剣士</option>
-        <option value="Mage">魔法使い</option>
-        <option value="Healer">ヒーラー</option>
-        <option value="Knight">騎士</option>
-    </select>
-    <br>
-    <label>仲間A: 
+    <div id="stage-1" class="stage-card active">
+        <h2>キャラクター作成</h2>
+        <p>あなたの分身となる英雄を作成します。</p>
+        <label>名前</label>
+        <input type="text" id="heroName" value="勇者">
+        <label>役職</label>
+        <select id="heroJob">
+            <option value="Swordsman">剣士</option>
+            <option value="Mage">魔法使い</option>
+            <option value="Healer">ヒーラー</option>
+            <option value="Knight">騎士</option>
+        </select>
+        <button onclick="nextStage(1, 2)">次へ ➡</button>
+    </div>
+
+    <div id="stage-2" class="stage-card">
+        <h2>仲間を選択 (1/2)</h2>
+        <p>一人目の仲間を選んでください。</p>
+        <label>仲間Aの役職</label>
         <select id="job2">
             <option value="Swordsman">剣士</option>
             <option value="Mage" selected>魔法使い</option>
             <option value="Healer">ヒーラー</option>
             <option value="Knight">騎士</option>
         </select>
-    </label>
-    <br>
-    <label>仲間B: 
+        <button onclick="nextStage(2, 3)">次へ ➡</button>
+    </div>
+
+    <div id="stage-3" class="stage-card">
+        <h2>仲間を選択 (2/2)</h2>
+        <p>二人目の仲間を選んでください。</p>
+        <label>仲間Bの役職</label>
         <select id="job3">
             <option value="Swordsman">剣士</option>
             <option value="Mage">魔法使い</option>
             <option value="Healer" selected>ヒーラー</option>
             <option value="Knight">騎士</option>
         </select>
-    </label>
-    <button onclick="startBattle()">冒険に出る！</button>
-</div>
-
-
-    <div id="log-window">
-        <div class="log-entry">冒険の準備が整いました。</div>
+        <button class="btn-battle" onclick="startAdventure()">冒険に出る！ ⚔️</button>
     </div>
 
-<script>
-    async function startBattle() {
-        const name = document.getElementById('playerName').value;
-        const job1 = document.getElementById('job1').value;
-        const job2 = document.getElementById('job2').value;
-        const job3 = document.getElementById('job3').value;
+    <div id="stage-4">
+        <h1 style="text-shadow: 2px 2px #000;">⚔️ Battle Log ⚔️</h1>
+        
+        <div id="log-window">
+            <div class="log-entry">パーティーを編成中...</div>
+        </div>
 
-        const logWindow = document.getElementById('log-window');
-        logWindow.innerHTML = "戦闘開始中...";
+        <button onclick="location.reload()" style="background-color: #555; width: auto; padding: 10px 30px;">もう一度遊ぶ</button>
 
-        try {
-            // 3つの職業をクエリパラメータで送る
-            const response = await fetch(`/api/battle?name=${name}&job1=${job1}&job2=${job2}&job3=${job3}`);
-            const logs = await response.json();
+        <hr style="margin: 40px 0; border-color: #444;">
 
-                // 画面をリセットしてログを表示
-                logWindow.innerHTML = "";
-                logs.forEach(log => {
-                    const div = document.createElement('div');
-                    div.className = 'log-entry';
-                    div.innerText = log; // 文字列リストの場合
-                    logWindow.appendChild(div);
+        <div id="history-section">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h2 style="margin:0;">📜 過去の戦績</h2>
+                <button onclick="loadHistory()" style="width: auto; padding: 5px 20px; font-size: 14px;">履歴を更新</button>
+            </div>
+            <ul id="history-list">
+                </ul>
+        </div>
+    </div>
+
+    <script>
+        // === ステージ切り替え ===
+        function nextStage(current, next) {
+            document.getElementById('stage-' + current).classList.remove('active');
+            document.getElementById('stage-' + current).style.display = 'none';
+            
+            const nextEl = document.getElementById('stage-' + next);
+            nextEl.style.display = 'block';
+            nextEl.classList.add('active');
+        }
+
+        // === 冒険開始 ===
+        async function startAdventure() {
+            // 1. デザインモード変更（カード固定 → スクロール全体表示）
+            document.body.classList.add('battle-mode');
+            
+            // 2. 画面切り替え
+            document.getElementById('stage-3').style.display = 'none';
+            document.getElementById('stage-4').style.display = 'block'; // activeクラスではなく通常のblock
+
+            // 3. データ取得
+            const name = document.getElementById('heroName').value;
+            const job1 = document.getElementById('heroJob').value;
+            const job2 = document.getElementById('job2').value;
+            const job3 = document.getElementById('job3').value;
+            const logWindow = document.getElementById('log-window');
+
+            logWindow.innerHTML = `<div class="log-entry" style="color:#ffff00">★ パーティー結成: ${name}(${job1}), 仲間A(${job2}), 仲間B(${job3})</div>`;
+
+            try {
+                // 戦闘API実行
+                const response = await fetch(`/api/battle?name=${name}&job1=${job1}&job2=${job2}&job3=${job3}`);
+                const logs = await response.json();
+
+                // ログ再生
+                logs.forEach((log, i) => {
+                    setTimeout(() => {
+                        const div = document.createElement('div');
+                        div.className = 'log-entry';
+                        div.innerText = log;
+                        logWindow.appendChild(div);
+                        logWindow.scrollTop = logWindow.scrollHeight;
+                    }, i * 100);
                 });
-            } catch (error) {
-                logWindow.innerHTML = "エラーが発生しました: " + error;
+
+                // 戦闘が終わった頃合いを見て、自動で履歴も読み込む
+                setTimeout(loadHistory, logs.length * 100 + 500);
+
+            } catch (e) {
+                logWindow.innerHTML += `<div style="color:red">エラー: ${e}</div>`;
             }
         }
+
+        // === 履歴読み込み機能（復活） ===
         async function loadHistory() {
-    const list = document.getElementById('history-list');
-    list.innerHTML = "読み込み中...";
+            const list = document.getElementById('history-list');
+            list.innerHTML = "<li style='color:#888'>読み込み中...</li>";
 
-    try {
-        // Java で作った @GetMapping("/history") を叩く
-        const response = await fetch('/api/history');
-        const history = await response.json();
+            try {
+                const response = await fetch('/api/history');
+                const history = await response.json();
+                list.innerHTML = ""; // クリア
 
-        list.innerHTML = ""; // 表示をクリア
-        
-        // 最新の 5 件を表示（新しい順にしたい場合は reverse() を使う）
-        history.reverse().slice(0, 5).forEach(item => {
-            const li = document.createElement('li');
-            li.className = 'log-entry'; // 既存のスタイルを流用
-            
-            // 日付を読みやすく整形
-            const date = new Date(item.createdAt).toLocaleString();
-            
-            li.innerHTML = `
-                <span style="color: #888;">[${date}]</span><br>
-                <strong>${item.enemyName}</strong> との戦闘 
-                → <span style="color: ${item.winner === '勇者' ? '#00ff00' : '#ff4500'}">勝者: ${item.winner}</span>
-            `;
-            list.appendChild(li);
-        });
+                // 最新の5件を表示
+                history.reverse().slice(0, 5).forEach(item => {
+                    const li = document.createElement('li');
+                    const date = new Date(item.createdAt).toLocaleString();
+                    const isWin = item.winner !== item.enemyName; // 勝者が敵じゃなければ勝ち
+                    
+                    li.innerHTML = `
+                        <span style="font-size:12px; color:#888;">[${date}]</span><br>
+                        <strong>${item.enemyName}</strong> との戦闘 
+                        → <span style="color: ${isWin ? '#00ff00' : '#ff4500'}">勝者: ${item.winner}</span>
+                    `;
+                    list.appendChild(li);
+                });
 
-        if (history.length === 0) {
-            list.innerHTML = "まだ戦績はありません。";
+                if (history.length === 0) list.innerHTML = "<li>まだ戦績はありません。</li>";
+
+            } catch (e) {
+                list.innerHTML = "<li>履歴の取得に失敗しました。</li>";
+            }
         }
-    } catch (error) {
-        list.innerHTML = "履歴の取得に失敗しました: " + error;
-    }
-}
-
-// ページを開いた時にも自動で読み込む
-window.onload = loadHistory;
     </script>
-    <hr style="margin-top: 40px; border: 1px double #444;">
-<h2>過去の戦績（データベースから取得）</h2>
-<button onclick="loadHistory()" style="background-color: #2e8b57; border-color: #3cb371;">履歴を更新</button>
-
-<ul id="history-list" style="text-align: left; max-width: 600px; margin: 20px auto; list-style: none; padding: 0;">
-    </ul>
 </body>
 </html>
