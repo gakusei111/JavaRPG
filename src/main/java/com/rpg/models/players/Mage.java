@@ -1,21 +1,42 @@
 package com.rpg.models.players;
 
 import com.rpg.models.BaseCharacter;
+import com.rpg.models.ActionResult;
 
 public class Mage extends Player {
     public Mage(String name) {
-        // 名前, Job名, HP, MP, 攻撃力
         super(name, "魔法使い", 80, 50, 5);
     }
 
-    // 魔法攻撃
-    public void fireBall(BaseCharacter target) {
-        if (getMp() >= 10) {
-            setMp(getMp() - 10);
-            System.out.println(getName() + " の火炎魔法！");
-            target.takeDamage(30); // 固定の大ダメージ
+    // ★追加: 魔法使いの通常攻撃
+    @Override
+    public ActionResult attack(BaseCharacter target) {
+        target.takeDamage(this.getAttackPower());
+        return new ActionResult(
+            this.getName() + " の杖による打撃！",
+            this.getAttackPower(),
+            target.getName()
+        );
+    }
+
+    // ★追加: 魔法使いのスキル実装（古い fireBall メソッドは削除）
+    @Override
+    public ActionResult useSkill(BaseCharacter target) {
+        if (this.getMp() >= 15) {
+            this.setMp(this.getMp() - 15);
+            int damage = this.getAttackPower() * 3;
+            target.takeDamage(damage);
+            return new ActionResult(
+                this.getName() + " のファイアボール！",
+                damage,
+                target.getName()
+            );
         } else {
-            System.out.println("MPが足りない!!");
+            return new ActionResult(
+                this.getName() + " はMPが足りない！",
+                0,
+                target.getName()
+            );
         }
     }
 }

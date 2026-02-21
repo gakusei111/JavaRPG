@@ -115,7 +115,7 @@
         <p>あなたの分身となる英雄を作成します。</p>
         
         <label>名前 <span style="font-size:12px; color:#888;">(1〜12文字)</span></label>
-        <input type="text" id="heroName" value="勇者" placeholder="名前を入力">
+        <input type="text" id="heroName" value="" placeholder="名前を入力">
         
         <p id="error-message" style="color: #ff4444; font-weight: bold; display: none; margin-top: -15px; margin-bottom: 15px;"></p>
 
@@ -157,23 +157,27 @@
     </div>
 
     <div id="stage-4">
-        <h1 style="text-shadow: 2px 2px #000;">⚔️ Battle Log ⚔️</h1>
+        <h1 style="text-shadow: 2px 2px #000;">Battle Log</h1>
         
         <div id="log-window">
             <div class="log-entry">パーティーを編成中...</div>
         </div>
 
-        <button onclick="location.reload()" style="background-color: #555; width: auto; padding: 10px 30px;">もう一度遊ぶ</button>
+        <div id="command-panel" style="display: none; margin-bottom: 20px;">
+            <button onclick="sendCommand('attack')" style="width: 48%; display: inline-block;">通常攻撃</button>
+            <button onclick="sendCommand('skill')" style="width: 48%; display: inline-block; background-color: #ff9900;">職業スキル</button>
+        </div>
+
+        <button id="restart-btn" onclick="location.reload()" style="display: none; background-color: #555; width: auto; padding: 10px 30px;">もう一度遊ぶ</button>
 
         <hr style="margin: 40px 0; border-color: #444;">
-
+        
         <div id="history-section">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h2 style="margin:0;">📜 過去の戦績</h2>
+                <h2 style="margin:0;">過去の戦績</h2>
                 <button onclick="loadHistory()" style="width: auto; padding: 5px 20px; font-size: 14px;">履歴を更新</button>
             </div>
-            <ul id="history-list">
-                </ul>
+            <ul id="history-list"></ul>
         </div>
     </div>
 
@@ -222,46 +226,74 @@
             nextEl.classList.add('active');
         }
 
-        // === 冒険開始 ===
+// === 冒険開始（初期化処理） ===
         async function startAdventure() {
-            // 1. デザインモード変更（カード固定 → スクロール全体表示）
             document.body.classList.add('battle-mode');
-            
-            // 2. 画面切り替え
             document.getElementById('stage-3').style.display = 'none';
-            document.getElementById('stage-4').style.display = 'block'; // activeクラスではなく通常のblock
+            document.getElementById('stage-4').style.display = 'block';
 
-            // 3. データ取得
             const name = document.getElementById('heroName').value;
             const job1 = document.getElementById('heroJob').value;
             const job2 = document.getElementById('job2').value;
             const job3 = document.getElementById('job3').value;
             const logWindow = document.getElementById('log-window');
 
-            logWindow.innerHTML = `<div class="log-entry" style="color:#ffff00">★ パーティー結成: ${name}(${job1}), 仲間A(${job2}), 仲間B(${job3})</div>`;
+            logWindow.innerHTML = `<div class="log-entry" style="color:#ffff00">パーティー結成: ${name}(${job1}), 仲間A(${job2}), 仲間B(${job3})</div>`;
 
             try {
-                // 戦闘API実行
-                const response = await fetch(`/api/battle?name=${name}&job1=${job1}&job2=${job2}&job3=${job3}`);
+                // 初期化APIを叩く
+                const response = await fetch(`/api/battle/init?name=${name}&job1=${job1}&job2=${job2}&job3=${job3}`);
                 const logs = await response.json();
 
-                // ログ再生
-                logs.forEach((log, i) => {
-                    setTimeout(() => {
-                        const div = document.createElement('div');
-                        div.className = 'log-entry';
-                        div.innerText = log;
-                        logWindow.appendChild(div);
-                        logWindow.scrollTop = logWindow.scrollHeight;
-                    }, i * 100);
-                });
-
-                // 戦闘が終わった頃合いを見て、自動で履歴も読み込む
-                setTimeout(loadHistory, logs.length * 100 + 500);
+                appendLogs(logs);
+                
+                // コマンドパネルを表示する
+                document.getElementById('command-panel').style.display = 'block';
 
             } catch (e) {
                 logWindow.innerHTML += `<div style="color:red">エラー: ${e}</div>`;
             }
+        }
+
+        // === コマンド送信処理（1ターンの実行） ===
+        async function sendCommand(action) {
+            // 連打防止のため一時的にボタンを隠す
+            document.getElementById('command-panel').style.display = 'none';
+
+            try {
+                const response = await fetch(`/api/battle/command?action=${action}`);
+                const data = await response.json(); // Map形式のデータを受信
+
+                appendLogs(data.logs);
+
+                // ゲーム終了判定
+                if (data.isGameOver) {
+                    document.getElementById('restart-btn').style.display = 'inline-block';
+                    setTimeout(loadHistory, data.logs.length * 100 + 500);
+                } else {
+                    // まだ続く場合はボタンを再表示（ログ表示の完了を待つ）
+                    setTimeout(() => {
+                        document.getElementById('command-panel').style.display = 'block';
+                    }, data.logs.length * 100);
+                }
+
+            } catch (e) {
+                console.error("通信エラー", e);
+            }
+        }
+
+        // ログを画面に追加する共通関数
+        function appendLogs(logs) {
+            const logWindow = document.getElementById('log-window');
+            logs.forEach((log, i) => {
+                setTimeout(() => {
+                    const div = document.createElement('div');
+                    div.className = 'log-entry';
+                    div.innerText = log;
+                    logWindow.appendChild(div);
+                    logWindow.scrollTop = logWindow.scrollHeight;
+                }, i * 100);
+            });
         }
 
         // === 履歴読み込み機能（復活） ===

@@ -1,9 +1,21 @@
 package com.rpg.models.players;
 
+import com.rpg.models.ActionResult;
+import com.rpg.models.BaseCharacter;
+
 public class Healer extends Player {
     public Healer(String name) {
         super(name, "ヒーラー", 90, 40, 3);
     }
+
+
+    // Knight.java と Healer.java の中に追加
+    @Override
+    public ActionResult useSkill(BaseCharacter target) {
+        // 仮実装
+        return this.attack(target);
+    }
+
 
     public void heal(Player target) {
         if (getMp() >= 8) {

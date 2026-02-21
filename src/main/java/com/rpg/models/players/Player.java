@@ -2,7 +2,7 @@ package com.rpg.models.players;
 
 import com.rpg.models.BaseCharacter;
 import com.rpg.models.Attacker;
-import com.rpg.models.ActionResult; // これが必要
+import com.rpg.models.ActionResult;
 
 public abstract class Player extends BaseCharacter implements Attacker {
     private String jobName;
@@ -16,7 +16,6 @@ public abstract class Player extends BaseCharacter implements Attacker {
         this.maxMp = mp;
     }
 
-    // === 修正ポイント: 戻り値を ActionResult にし、中身で結果を返す ===
     @Override
     public ActionResult attack(BaseCharacter target) {
         target.takeDamage(this.getAttackPower());
@@ -27,7 +26,9 @@ public abstract class Player extends BaseCharacter implements Attacker {
         );
     }
 
-    // Getterなどはそのまま
+    // ★追加: 各職業で必ず実装させるスキルの抽象メソッド
+    public abstract ActionResult useSkill(BaseCharacter target);
+
     public String getJobName() { return jobName; }
     public int getMp() { return mp; }
     public void setMp(int mp) { this.mp = Math.max(0, Math.min(mp, maxMp)); }

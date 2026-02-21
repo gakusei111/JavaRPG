@@ -1,76 +1,89 @@
 package com.rpg.controllers;
 
 import com.rpg.engine.BattleManager;
-import com.rpg.models.ActionResult;
-import com.rpg.models.BattleLog;          // 追加
+import com.rpg.models.BattleLog;
 import com.rpg.models.enemies.*;
 import com.rpg.models.players.*;
-import com.rpg.repository.BattleLogRepository; // 追加
+import com.rpg.repository.BattleLogRepository;
+import jakarta.servlet.http.HttpSession; // Spring Boot 3の場合
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 @RestController
 @RequestMapping("/api")
 public class GameController {
 
-    @Autowired // Spring Bootが勝手にRepositoryを用意する
+    @Autowired
     private BattleLogRepository repository;
 
-    @GetMapping("/battle")
-    public List<String> startBattle(
-@RequestParam(defaultValue = "勇者") String name,
-            @RequestParam(defaultValue = "Swordsman") String job1, // 主人公のジョブ
-            @RequestParam(defaultValue = "Mage") String job2,      // 仲間A
-            @RequestParam(defaultValue = "Healer") String job3     // 仲間B
-    ) {
+    // 1. 戦闘の初期化（セッションにデータを保存）
+    @GetMapping("/battle/init")
+    public List<String> initBattle(
+            @RequestParam String name, @RequestParam String job1,
+            @RequestParam String job2, @RequestParam String job3,
+            HttpSession session) {
+        
         List<Player> party = new ArrayList<>();
-
-        // ジョブに応じたプレイヤーを作成するヘルパーメソッド
         party.add(createPlayer(name, job1));
         party.add(createPlayer("仲間A", job2));
         party.add(createPlayer("仲間B", job3));
 
-        Enemy enemy;
-        Random random = new Random();
-        if (random.nextBoolean()) { // 50%の確率
-            enemy = new Slime();   // 弱い
-        } else {
-            enemy = new Goblin();  // ちょっと強い
-        }
+        Enemy enemy = new Random().nextBoolean() ? new Slime() : new Goblin();
 
+        // セッション（サーバーのメモリ）に現在の状態を保存
+        session.setAttribute("party", party);
+        session.setAttribute("enemy", enemy);
+        session.setAttribute("turn", 1);
 
-        BattleManager manager = new BattleManager();
-        manager.startBattle(party, enemy);
-
-// 結果保存（勝利判定：パーティの誰か一人でも生きていれば勝ち）
-        boolean isWin = party.stream().anyMatch(p -> p.isAlive());
-        String winner = isWin ? "勇者一行" : enemy.getName();
-        
-        BattleLog log = new BattleLog(enemy.getName(), winner);
-        repository.save(log);
-
-        return manager.getBattleLogs();
+        List<String> initLogs = new ArrayList<>();
+        initLogs.add("戦闘開始！ 3人で " + enemy.getName() + " に挑む！");
+        return initLogs;
     }
 
-    // 文字列からクラスを作る便利メソッド（ファクトリーメソッド）
+    // 2. コマンドの実行（セッションからデータを読み込んでターンを進める）
+    @GetMapping("/battle/command")
+    public Map<String, Object> executeCommand(@RequestParam String action, HttpSession session) {
+        // セッションからデータを取り出す
+        List<Player> party = (List<Player>) session.getAttribute("party");
+        Enemy enemy = (Enemy) session.getAttribute("enemy");
+        Integer turn = (Integer) session.getAttribute("turn");
+
+        BattleManager manager = new BattleManager();
+        manager.executeTurn(party, enemy, action, turn);
+
+        // ターン数を進めて保存
+        session.setAttribute("turn", turn + 1);
+
+        // 終了判定
+        boolean isEnemyDead = !enemy.isAlive();
+        boolean isPartyDead = party.stream().noneMatch(Player::isAlive);
+        boolean isGameOver = isEnemyDead || isPartyDead;
+
+        if (isGameOver) {
+            String winner = isPartyDead ? enemy.getName() : "勇者一行";
+            repository.save(new BattleLog(enemy.getName(), winner));
+            session.invalidate(); // 戦闘終了時にセッションを破棄（メモリ解放）
+        }
+
+        // フロントエンドに返すデータをMapで構築
+        Map<String, Object> response = new HashMap<>();
+        response.put("logs", manager.getBattleLogs());
+        response.put("isGameOver", isGameOver);
+        return response;
+    }
+
     private Player createPlayer(String name, String job) {
         switch (job) {
             case "Mage": return new Mage(name);
             case "Healer": return new Healer(name);
             case "Knight": return new Knight(name);
-            case "Swordsman": 
-            default: return new Swordsman(name);
+            case "Swordsman": default: return new Swordsman(name);
         }
-    }
-
-    
-    // ★ 保存された履歴を見るための新しいURL
-    @GetMapping("/history")
-    public List<BattleLog> getHistory() {
-        return repository.findAll(); // SELECT * FROM BattleLog が実行される！
     }
 }
