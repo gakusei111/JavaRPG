@@ -23,28 +23,42 @@ public class GameController {
     private BattleLogRepository repository;
 
     // 1. 戦闘の初期化（セッションにデータを保存）
-    @GetMapping("/battle/init")
-    public List<String> initBattle(
-            @RequestParam String name, @RequestParam String job1,
-            @RequestParam String job2, @RequestParam String job3,
-            HttpSession session) {
-        
-        List<Player> party = new ArrayList<>();
-        party.add(createPlayer(name, job1));
-        party.add(createPlayer("仲間A", job2));
-        party.add(createPlayer("仲間B", job3));
+    /**
+ * 戦闘初期化APIのレスポンス拡張
+ * ログだけでなく、フロントエンドでの描画に必要なメタデータをMap形式で返却する。
+ */
+@GetMapping("/battle/init")
+public Map<String, Object> initBattle(
+        @RequestParam String name, @RequestParam String job1,
+        @RequestParam String job2, @RequestParam String job3,
+        HttpSession session) {
+    
+    List<Player> party = new ArrayList<>();
+    party.add(createPlayer(name, job1));
+    party.add(createPlayer("仲間A", job2));
+    party.add(createPlayer("仲間B", job3));
 
-        Enemy enemy = new Random().nextBoolean() ? new Slime() : new Goblin();
+    // ランダムで敵を抽選
+    Enemy enemy = new Random().nextBoolean() ? new Slime() : new Goblin();
 
-        // セッション（サーバーのメモリ）に現在の状態を保存
-        session.setAttribute("party", party);
-        session.setAttribute("enemy", enemy);
-        session.setAttribute("turn", 1);
+    session.setAttribute("party", party);
+    session.setAttribute("enemy", enemy);
+    session.setAttribute("turn", 1);
 
-        List<String> initLogs = new ArrayList<>();
-        initLogs.add("戦闘開始！ 3人で " + enemy.getName() + " に挑む！");
-        return initLogs;
-    }
+    // フロントエンドに渡すデータの構築
+    Map<String, Object> response = new HashMap<>();
+    List<String> logs = new ArrayList<>();
+    logs.add("戦闘開始！ " + enemy.getName() + " が現れた！");
+
+    response.put("logs", logs);
+    // 画像切り替え用のキー（すべて小文字で統一）
+    response.put("enemyKey", enemy.getName().toLowerCase()); 
+    response.put("heroKey", job1.toLowerCase());
+    response.put("memberAKey", job2.toLowerCase());
+    response.put("memberBKey", job3.toLowerCase());
+
+    return response;
+}
 
     // 2. コマンドの実行（セッションからデータを読み込んでターンを進める）
     @GetMapping("/battle/command")
@@ -65,16 +79,52 @@ public class GameController {
         boolean isPartyDead = party.stream().noneMatch(Player::isAlive);
         boolean isGameOver = isEnemyDead || isPartyDead;
 
-        if (isGameOver) {
+if (isGameOver) {
             String winner = isPartyDead ? enemy.getName() : "勇者一行";
             repository.save(new BattleLog(enemy.getName(), winner));
-            session.invalidate(); // 戦闘終了時にセッションを破棄（メモリ解放）
+            /* * 同一パーティーでの連戦機能を実装したため、セッションの破棄処理を削除。
+             * 完全な初期化はフロントエンドからのページリロードに委ねる。
+             */
+            // session.invalidate(); 
         }
 
         // フロントエンドに返すデータをMapで構築
         Map<String, Object> response = new HashMap<>();
         response.put("logs", manager.getBattleLogs());
         response.put("isGameOver", isGameOver);
+        return response;
+    }
+
+
+    
+
+    /**
+     * 同一パーティーでの戦闘再開エンドポイント
+     * セッション内のPlayer状態（HP/MP）を初期値まで回復させ、新たなEnemyを生成してセッションを更新する。
+     */
+    @GetMapping("/battle/restart")
+    public Map<String, Object> restartBattle(HttpSession session) {
+        @SuppressWarnings("unchecked")
+        List<Player> party = (List<Player>) session.getAttribute("party");
+        
+        // メンバーのステータスを最大値にリセット
+        for (Player p : party) {
+            p.setHp(p.getMaxHp());
+            p.setMp(p.getMaxMp());
+        }
+
+        // 新規エネミーの生成とセッション状態の上書き
+        Enemy enemy = new Random().nextBoolean() ? new Slime() : new Goblin();
+        session.setAttribute("enemy", enemy);
+        session.setAttribute("turn", 1);
+
+        List<String> logs = new ArrayList<>();
+        logs.add("=== 次のバトルが始まった ===");
+        logs.add(enemy.getName() + " が現れた！");
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("logs", logs);
+        response.put("isGameOver", false);
         return response;
     }
 

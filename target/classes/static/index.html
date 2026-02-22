@@ -106,6 +106,43 @@
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        /* バトルビュー全体のコンテナ */
+#battle-view {
+    background: #1a1a1a;
+    border: 2px solid #444;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+}
+
+/* 敵の配置（中央） */
+.enemy-side img {
+    width: 160px; /* 64pxを2.5倍に拡大 */
+    height: 160px;
+    image-rendering: pixelated; /* ドットをくっきりさせる魔法のプロパティ */
+}
+
+/* 味方の配置（横並び） */
+.player-side {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+}
+
+.char-box { text-align: center; font-size: 12px; color: #aaa; }
+.char-box img {
+    width: 100px; /* 64pxを約1.5倍に拡大 */
+    height: 100px;
+    image-rendering: pixelated;
+}
+
+
+
     </style>
 </head>
 <body>
@@ -159,6 +196,18 @@
     <div id="stage-4">
         <h1 style="text-shadow: 2px 2px #000;">Battle Log</h1>
         
+        <div id="battle-view">
+            <div class="enemy-side">
+                <img id="enemy-img" src="" alt="Enemy">
+            </div>
+            
+            <div class="player-side">
+                <div class="char-box"><img id="hero-img" src="" alt="Hero"><p>主人公</p></div>
+                <div class="char-box"><img id="memberA-img" src="" alt="Member A"><p>仲間A</p></div>
+                <div class="char-box"><img id="memberB-img" src="" alt="Member B"><p>仲間B</p></div>
+            </div>
+        </div>
+
         <div id="log-window">
             <div class="log-entry">パーティーを編成中...</div>
         </div>
@@ -168,7 +217,10 @@
             <button onclick="sendCommand('skill')" style="width: 48%; display: inline-block; background-color: #ff9900;">職業スキル</button>
         </div>
 
-        <button id="restart-btn" onclick="location.reload()" style="display: none; background-color: #555; width: auto; padding: 10px 30px;">もう一度遊ぶ</button>
+        <div id="result-actions" style="display: none; margin-bottom: 20px;">
+            <button onclick="restartSameParty()" style="width: 48%; display: inline-block; background-color: #28a745;">同じパーティーで進む</button>
+            <button onclick="location.reload()" style="width: 48%; display: inline-block; background-color: #dc3545;">最初から遊ぶ</button>
+        </div>
 
         <hr style="margin: 40px 0; border-color: #444;">
         
@@ -226,7 +278,10 @@
             nextEl.classList.add('active');
         }
 
-// === 冒険開始（初期化処理） ===
+/**
+         * 冒険開始（初期化）処理
+         * UIを戦闘モードに切り替え、サーバーから初期状態を取得して描画する。
+         */
         async function startAdventure() {
             document.body.classList.add('battle-mode');
             document.getElementById('stage-3').style.display = 'none';
@@ -241,17 +296,26 @@
             logWindow.innerHTML = `<div class="log-entry" style="color:#ffff00">パーティー結成: ${name}(${job1}), 仲間A(${job2}), 仲間B(${job3})</div>`;
 
             try {
-                // 初期化APIを叩く
+                // APIリクエスト（1回のみ実行）
                 const response = await fetch(`/api/battle/init?name=${name}&job1=${job1}&job2=${job2}&job3=${job3}`);
-                const logs = await response.json();
+                const data = await response.json();
 
-                appendLogs(logs);
+                // 画像のソースを動的に生成して適用
+                document.getElementById('enemy-img').src = `/images/enemy_${data.enemyKey}.png`;
+                // Java側から大文字混じりで来る可能性があるためtoLowerCase()で小文字に統一
+                document.getElementById('hero-img').src = `/images/player_${data.heroKey.toLowerCase()}.png`;
+                document.getElementById('memberA-img').src = `/images/player_${data.memberAKey.toLowerCase()}.png`;
+                document.getElementById('memberB-img').src = `/images/player_${data.memberBKey.toLowerCase()}.png`;
+
+                // ログの描画
+                appendLogs(data.logs);
                 
-                // コマンドパネルを表示する
+                // コマンドパネルの表示
                 document.getElementById('command-panel').style.display = 'block';
 
             } catch (e) {
-                logWindow.innerHTML += `<div style="color:red">エラー: ${e}</div>`;
+                console.error("Initialization failed:", e);
+                logWindow.innerHTML += `<div style="color:red">エラー: 通信に失敗しました。サーバーが起動しているか確認してください。</div>`;
             }
         }
 
@@ -266,9 +330,9 @@
 
                 appendLogs(data.logs);
 
-                // ゲーム終了判定
+            // ゲーム終了判定
                 if (data.isGameOver) {
-                    document.getElementById('restart-btn').style.display = 'inline-block';
+                    document.getElementById('result-actions').style.display = 'block';
                     setTimeout(loadHistory, data.logs.length * 100 + 500);
                 } else {
                     // まだ続く場合はボタンを再表示（ログ表示の完了を待つ）
@@ -279,6 +343,34 @@
 
             } catch (e) {
                 console.error("通信エラー", e);
+            }
+        }
+
+
+        /**
+         * 同一パーティーでの戦闘再開処理
+         * バックエンドの初期化APIを叩き、UIを戦闘用の状態にリセットする。
+         */
+        async function restartSameParty() {
+            document.getElementById('result-actions').style.display = 'none';
+            const logWindow = document.getElementById('log-window');
+            
+            // DOMの肥大化を防ぐため既存のログをクリア
+            logWindow.innerHTML = '<div class="log-entry" style="color:#aaaaaa;">新しい戦闘を準備中...</div>';
+
+            try {
+                const response = await fetch('/api/battle/restart');
+                const data = await response.json();
+                
+                // ログ描画後にコマンドパネルを再表示
+                appendLogs(data.logs);
+                setTimeout(() => {
+                    document.getElementById('command-panel').style.display = 'block';
+                }, data.logs.length * 100);
+
+            } catch (e) {
+                console.error("Failed to restart battle.", e);
+                logWindow.innerHTML += `<div style="color:red">通信エラーが発生しました。サーバーの状態を確認してください。</div>`;
             }
         }
 
