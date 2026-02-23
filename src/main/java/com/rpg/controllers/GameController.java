@@ -52,11 +52,22 @@ public Map<String, Object> initBattle(
 
     response.put("logs", logs);
     // 画像切り替え用のキー（すべて小文字で統一）
-    response.put("enemyKey", enemy.getName().toLowerCase()); 
-    response.put("heroKey", job1.toLowerCase());
+// クラス名を取得して小文字にする（Slime → slime）
+    response.put("enemyKey", enemy.getClass().getSimpleName().toLowerCase());    response.put("heroKey", job1.toLowerCase());
     response.put("memberAKey", job2.toLowerCase());
     response.put("memberBKey", job3.toLowerCase());
 
+    // 敵の最新ステータス情報を抽出してMapに詰める
+        Map<String, Object> enemyStatus = new HashMap<>();
+        enemyStatus.put("name", enemy.getName());
+        enemyStatus.put("hp", enemy.getHp());
+        enemyStatus.put("maxHp", enemy.getMaxHp());
+        enemyStatus.put("attackPower", enemy.getAttackPower());
+        // レスポンスに追加
+        response.put("enemyStatus", enemyStatus);
+
+    // フロントエンドに最新のステータス情報を渡す
+        response.put("partyStatus", getPartyStatus(party));
     return response;
 }
 
@@ -92,6 +103,18 @@ if (isGameOver) {
         Map<String, Object> response = new HashMap<>();
         response.put("logs", manager.getBattleLogs());
         response.put("isGameOver", isGameOver);
+
+        // 敵の最新ステータス情報を抽出してMapに詰める
+        Map<String, Object> enemyStatus = new HashMap<>();
+        enemyStatus.put("name", enemy.getName());
+        enemyStatus.put("hp", enemy.getHp());
+        enemyStatus.put("maxHp", enemy.getMaxHp());
+        enemyStatus.put("attackPower", enemy.getAttackPower());
+        // レスポンスに追加
+        response.put("enemyStatus", enemyStatus);
+
+        // フロントエンドに最新のステータス情報を渡す
+        response.put("partyStatus", getPartyStatus(party));
         return response;
     }
 
@@ -125,6 +148,18 @@ if (isGameOver) {
         Map<String, Object> response = new HashMap<>();
         response.put("logs", logs);
         response.put("isGameOver", false);
+
+// 敵の最新ステータス情報を抽出してMapに詰める
+        Map<String, Object> enemyStatus = new HashMap<>();
+        enemyStatus.put("name", enemy.getName());
+        enemyStatus.put("hp", enemy.getHp());
+        enemyStatus.put("maxHp", enemy.getMaxHp());
+        enemyStatus.put("attackPower", enemy.getAttackPower());
+        // レスポンスに追加
+        response.put("enemyStatus", enemyStatus);
+
+        // フロントエンドに最新のステータス情報を渡す
+        response.put("partyStatus", getPartyStatus(party));
         return response;
     }
 
@@ -136,4 +171,23 @@ if (isGameOver) {
             case "Swordsman": default: return new Swordsman(name);
         }
     }
+
+    /**
+     * パーティーの現在のステータスを抽出するヘルパーメソッド
+     */
+    private List<Map<String, Object>> getPartyStatus(List<Player> party) {
+        List<Map<String, Object>> statusList = new ArrayList<>();
+        for (Player p : party) {
+            Map<String, Object> status = new HashMap<>();
+            status.put("name", p.getName());
+            status.put("hp", p.getHp());
+            status.put("maxHp", p.getMaxHp());
+            status.put("mp", p.getMp());
+            status.put("maxMp", p.getMaxMp());
+            status.put("attackPower", p.getAttackPower());
+            statusList.add(status);
+        }
+        return statusList;
+    }
+
 }

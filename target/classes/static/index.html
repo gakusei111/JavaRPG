@@ -70,18 +70,16 @@
         }
 
         /* ログウィンドウ */
-        #log-window {
-            background: #000;
-            border: 4px double #fff;
-            border-radius: 8px;
-            height: 300px;
-            padding: 20px;
-            overflow-y: scroll;
-            text-align: left;
-            font-family: 'Courier New', monospace;
-            box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
-            margin-bottom: 30px;
-        }
+        /* ログウィンドウ */
+#log-window {
+    background: #000;
+    border: 4px double #fff;
+    border-radius: 8px;
+    height: 200px; /* ★ここを 300px から 200px や 150px など小さい数値に変更する */
+    padding: 20px;
+    overflow-y: scroll;
+    /* ...その他の設定はそのまま... */
+}
         .log-entry { margin-bottom: 5px; border-bottom: 1px dashed #333; }
 
         /* 履歴リストのデザイン */
@@ -141,7 +139,25 @@
     image-rendering: pixelated;
 }
 
-
+/* ステータス表示用のデザイン */
+.status-box {
+    text-align: left;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid #555;
+    border-radius: 4px;
+    padding: 5px 8px;
+    margin-top: 5px;
+    font-size: 11px;
+    color: #ddd;
+    line-height: 1.4;
+    font-family: monospace;
+}
+.status-name {
+    margin: 5px 0;
+    font-weight: bold;
+    color: #fff;
+    font-size: 14px;
+}
 
     </style>
 </head>
@@ -199,13 +215,42 @@
         <div id="battle-view">
             <div class="enemy-side">
                 <img id="enemy-img" src="" alt="Enemy">
-            </div>
+                <p id="enemy-name" class="status-name" style="font-size: 16px;">-</p>
+                <div class="status-box" style="display: inline-block; text-align: center;">
+                    HP: <span id="enemy-hp">-</span> / <span id="enemy-maxhp">-</span><br>
+                    ATK: <span id="enemy-atk">-</span>
+                </div>
+                </div>
             
             <div class="player-side">
-                <div class="char-box"><img id="hero-img" src="" alt="Hero"><p>主人公</p></div>
-                <div class="char-box"><img id="memberA-img" src="" alt="Member A"><p>仲間A</p></div>
-                <div class="char-box"><img id="memberB-img" src="" alt="Member B"><p>仲間B</p></div>
+            <div class="char-box">
+                <img id="hero-img" src="" alt="Hero">
+                <p id="hero-name" class="status-name">主人公</p>
+                <div class="status-box">
+                    HP: <span id="hero-hp">-</span> / <span id="hero-maxhp">-</span><br>
+                    MP: <span id="hero-mp">-</span> / <span id="hero-maxmp">-</span><br>
+                    ATK: <span id="hero-atk">-</span>
+                </div>
             </div>
+            <div class="char-box">
+                <img id="memberA-img" src="" alt="Member A">
+                <p id="memberA-name" class="status-name">仲間A</p>
+                <div class="status-box">
+                    HP: <span id="memberA-hp">-</span> / <span id="memberA-maxhp">-</span><br>
+                    MP: <span id="memberA-mp">-</span> / <span id="memberA-maxmp">-</span><br>
+                    ATK: <span id="memberA-atk">-</span>
+                </div>
+            </div>
+            <div class="char-box">
+                <img id="memberB-img" src="" alt="Member B">
+                <p id="memberB-name" class="status-name">仲間B</p>
+                <div class="status-box">
+                    HP: <span id="memberB-hp">-</span> / <span id="memberB-maxhp">-</span><br>
+                    MP: <span id="memberB-mp">-</span> / <span id="memberB-maxmp">-</span><br>
+                    ATK: <span id="memberB-atk">-</span>
+                </div>
+            </div>
+        </div>
         </div>
 
         <div id="log-window">
@@ -300,6 +345,9 @@
                 const response = await fetch(`/api/battle/init?name=${name}&job1=${job1}&job2=${job2}&job3=${job3}`);
                 const data = await response.json();
 
+                // データ受信後、ステータスUIを更新
+        updateStatus(data.partyStatus, data.enemyStatus);
+
                 // 画像のソースを動的に生成して適用
                 document.getElementById('enemy-img').src = `/images/enemy_${data.enemyKey}.png`;
                 // Java側から大文字混じりで来る可能性があるためtoLowerCase()で小文字に統一
@@ -327,6 +375,9 @@
             try {
                 const response = await fetch(`/api/battle/command?action=${action}`);
                 const data = await response.json(); // Map形式のデータを受信
+
+                // データ受信後、ステータスUIを更新
+        updateStatus(data.partyStatus, data.enemyStatus);
 
                 appendLogs(data.logs);
 
@@ -361,6 +412,9 @@
             try {
                 const response = await fetch('/api/battle/restart');
                 const data = await response.json();
+
+                // データ受信後、ステータスUIを更新
+        updateStatus(data.partyStatus, data.enemyStatus);
                 
                 // ログ描画後にコマンドパネルを再表示
                 appendLogs(data.logs);
@@ -387,6 +441,47 @@
                 }, i * 100);
             });
         }
+
+        /**
+         * パーティーと敵のステータス表示を更新する関数
+         * @param {Array} partyStatus - 味方3人のステータス配列
+         * @param {Object} enemyStatus - 敵1体のステータスオブジェクト
+         */
+        function updateStatus(partyStatus, enemyStatus) {
+            // ▼ 味方のステータス反映（既存処理） ▼
+            if (partyStatus && partyStatus.length >= 3) {
+                // 主人公
+                document.getElementById('hero-name').innerText = partyStatus[0].name;
+                document.getElementById('hero-hp').innerText = partyStatus[0].hp;
+                document.getElementById('hero-maxhp').innerText = partyStatus[0].maxHp;
+                document.getElementById('hero-mp').innerText = partyStatus[0].mp;
+                document.getElementById('hero-maxmp').innerText = partyStatus[0].maxMp;
+                document.getElementById('hero-atk').innerText = partyStatus[0].attackPower;
+                // 仲間A
+                document.getElementById('memberA-name').innerText = partyStatus[1].name;
+                document.getElementById('memberA-hp').innerText = partyStatus[1].hp;
+                document.getElementById('memberA-maxhp').innerText = partyStatus[1].maxHp;
+                document.getElementById('memberA-mp').innerText = partyStatus[1].mp;
+                document.getElementById('memberA-maxmp').innerText = partyStatus[1].maxMp;
+                document.getElementById('memberA-atk').innerText = partyStatus[1].attackPower;
+                // 仲間B
+                document.getElementById('memberB-name').innerText = partyStatus[2].name;
+                document.getElementById('memberB-hp').innerText = partyStatus[2].hp;
+                document.getElementById('memberB-maxhp').innerText = partyStatus[2].maxHp;
+                document.getElementById('memberB-mp').innerText = partyStatus[2].mp;
+                document.getElementById('memberB-maxmp').innerText = partyStatus[2].maxMp;
+                document.getElementById('memberB-atk').innerText = partyStatus[2].attackPower;
+            }
+
+            // ▼ 敵のステータス反映（追加処理） ▼
+            if (enemyStatus) {
+                document.getElementById('enemy-name').innerText = enemyStatus.name;
+                document.getElementById('enemy-hp').innerText = enemyStatus.hp;
+                document.getElementById('enemy-maxhp').innerText = enemyStatus.maxHp;
+                document.getElementById('enemy-atk').innerText = enemyStatus.attackPower;
+            }
+        }
+
 
         // === 履歴読み込み機能（復活） ===
         async function loadHistory() {
