@@ -17,37 +17,29 @@ public class BattleManager {
     }
 
     // 1ターン分の処理だけを行うメソッド
-    public void executeTurn(List<Player> party, Enemy enemy, String command, int turn) {
+// 変更: String command → List<String> commands に変更
+    public void executeTurn(List<Player> party, Enemy enemy, List<String> commands, int turn) {
         battleLogs.clear();
         addLog("【ターン " + turn + "】");
 
-// 1. 勇者（主人公）の行動（プレイヤーの入力に基づく）
-        Player hero = party.get(0);
-        if (hero.isAlive()) {
-            if ("skill".equals(command)) {
-                // クラスが何であれ、自身のuseSkillを実行させる（ポリモーフィズム）
-                ActionResult result = hero.useSkill(enemy);
-                addLog(result.getFullLog());
-            } else {
-                // 通常攻撃
-                ActionResult result = hero.attack(enemy);
-                addLog(result.getFullLog());
-            }
-        }
-
-        // 敵が倒れたかチェック
-        if (!enemy.isAlive()) {
-            addLog(enemy.getName() + " を倒した！");
-            addLog("勝者: 勇者一行");
-            return; // ターン終了
-        }
-
-        // 2. 仲間の行動（オート）
-        for (int i = 1; i < party.size(); i++) {
+        // 1. パーティー全員の行動（リストで受け取ったコマンドを順に実行）
+        for (int i = 0; i < party.size(); i++) {
             Player member = party.get(i);
+            
+            // 死んでいる場合は行動スキップ
             if (member.isAlive()) {
-                ActionResult result = member.attack(enemy);
+                // 安全策：万が一コマンド配列が足りない場合は通常攻撃にする
+                String cmd = (commands != null && commands.size() > i) ? commands.get(i) : "attack";
+                ActionResult result;
+                
+                if ("skill".equals(cmd)) {
+                    result = member.useSkill(enemy);
+                } else {
+                    result = member.attack(enemy);
+                }
                 addLog(result.getFullLog());
+
+                // 敵が倒れたかチェック（誰かの攻撃で倒れたら即終了）
                 if (!enemy.isAlive()) {
                     addLog(enemy.getName() + " を倒した！");
                     addLog("勝者: 勇者一行");
@@ -56,7 +48,7 @@ public class BattleManager {
             }
         }
 
-        // 3. 敵の行動
+        // 2. 敵の行動
         if (enemy.isAlive()) {
             Player target = getRandomAliveMember(party);
             if (target != null) {
@@ -69,7 +61,7 @@ public class BattleManager {
             }
         }
 
-        // 全滅チェック
+        // 3. 全滅チェック
         if (!isPartyAlive(party)) {
             addLog("全滅しました...");
             addLog("勝者: " + enemy.getName());

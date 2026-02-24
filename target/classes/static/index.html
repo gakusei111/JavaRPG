@@ -258,8 +258,9 @@
         </div>
 
         <div id="command-panel" style="display: none; margin-bottom: 20px;">
-            <button onclick="sendCommand('attack')" style="width: 48%; display: inline-block;">通常攻撃</button>
-            <button onclick="sendCommand('skill')" style="width: 48%; display: inline-block; background-color: #ff9900;">職業スキル</button>
+            <div id="command-target-name" style="font-weight:bold; color:#ffcc00; margin-bottom:10px;">-</div>
+            <button onclick="registerCommand('attack')" style="width: 48%; display: inline-block;">通常攻撃</button>
+            <button onclick="registerCommand('skill')" style="width: 48%; display: inline-block; background-color: #ff9900;">職業スキル</button>
         </div>
 
         <div id="result-actions" style="display: none; margin-bottom: 20px;">
@@ -278,7 +279,83 @@
         </div>
     </div>
 
+
+
     <script>
+
+        // --- ターン制御用ステート ---
+        let currentPartyStatus = [];
+        let pendingCommands = [];
+        let currentInputIndex = 0;
+
+        /**
+         * ターンのコマンド入力フェーズを開始する
+         */
+        function startCommandInput() {
+            pendingCommands = [];
+            currentInputIndex = 0;
+            askNextCommand();
+        }
+
+        /**
+         * 次のキャラクターの入力を促す、または全員終わっていれば送信する
+         */
+        function askNextCommand() {
+            // HPが0以下のキャラクターは自動的にスキップ（ダミーコマンドを挿入）
+            while (currentInputIndex < 3 && currentPartyStatus[currentInputIndex].hp <= 0) {
+                pendingCommands.push('attack');
+                currentInputIndex++;
+            }
+
+            if (currentInputIndex >= 3) {
+                // 全員の入力が完了したらバックエンドへ送信
+                executeBatchCommands();
+            } else {
+                // 入力UIの表示更新
+                document.getElementById('command-target-name').innerText = currentPartyStatus[currentInputIndex].name + " の行動を選択";
+                document.getElementById('command-panel').style.display = 'block';
+            }
+        }
+
+        /**
+         * ボタン押下時にコマンドを記録し、次の処理へ進む
+         */
+        function registerCommand(action) {
+            document.getElementById('command-panel').style.display = 'none';
+            pendingCommands.push(action);
+            currentInputIndex++;
+            askNextCommand();
+        }
+
+        /**
+         * 収集した全員分のコマンドをサーバーに送信してターンを実行する
+         */
+        async function executeBatchCommands() {
+            const query = `actions=${pendingCommands.join(',')}`;
+            try {
+                const response = await fetch(`/api/battle/command?${query}`);
+                const data = await response.json(); 
+
+                // ステータスと最新状態の保存
+                updateStatus(data.partyStatus, data.enemyStatus);
+                currentPartyStatus = data.partyStatus; 
+                appendLogs(data.logs);
+
+                // ゲーム終了判定
+                if (data.isGameOver) {
+                    document.getElementById('result-actions').style.display = 'block';
+                    setTimeout(loadHistory, data.logs.length * 100 + 500);
+                } else {
+                    // ログの表示完了を待ってから次のターンの入力へ
+                    setTimeout(() => {
+                        startCommandInput();
+                    }, data.logs.length * 100);
+                }
+            } catch (e) {
+                console.error("通信エラー", e);
+            }
+        }
+
 
         // === 名前のバリデーション ===
         function validateHeroName() {
@@ -323,7 +400,7 @@
             nextEl.classList.add('active');
         }
 
-/**
+        /**
          * 冒険開始（初期化）処理
          * UIを戦闘モードに切り替え、サーバーから初期状態を取得して描画する。
          */
@@ -346,20 +423,22 @@
                 const data = await response.json();
 
                 // データ受信後、ステータスUIを更新
-        updateStatus(data.partyStatus, data.enemyStatus);
+                updateStatus(data.partyStatus, data.enemyStatus);
 
                 // 画像のソースを動的に生成して適用
                 document.getElementById('enemy-img').src = `/images/enemy_${data.enemyKey}.png`;
-                // Java側から大文字混じりで来る可能性があるためtoLowerCase()で小文字に統一
                 document.getElementById('hero-img').src = `/images/player_${data.heroKey.toLowerCase()}.png`;
                 document.getElementById('memberA-img').src = `/images/player_${data.memberAKey.toLowerCase()}.png`;
                 document.getElementById('memberB-img').src = `/images/player_${data.memberBKey.toLowerCase()}.png`;
 
+                // 現在のステータスを保持（順番入力フェーズ用）
+                currentPartyStatus = data.partyStatus;
+
                 // ログの描画
                 appendLogs(data.logs);
                 
-                // コマンドパネルの表示
-                document.getElementById('command-panel').style.display = 'block';
+                // 入力フェーズ開始関数を呼ぶ
+                startCommandInput();
 
             } catch (e) {
                 console.error("Initialization failed:", e);
@@ -367,35 +446,7 @@
             }
         }
 
-        // === コマンド送信処理（1ターンの実行） ===
-        async function sendCommand(action) {
-            // 連打防止のため一時的にボタンを隠す
-            document.getElementById('command-panel').style.display = 'none';
 
-            try {
-                const response = await fetch(`/api/battle/command?action=${action}`);
-                const data = await response.json(); // Map形式のデータを受信
-
-                // データ受信後、ステータスUIを更新
-        updateStatus(data.partyStatus, data.enemyStatus);
-
-                appendLogs(data.logs);
-
-            // ゲーム終了判定
-                if (data.isGameOver) {
-                    document.getElementById('result-actions').style.display = 'block';
-                    setTimeout(loadHistory, data.logs.length * 100 + 500);
-                } else {
-                    // まだ続く場合はボタンを再表示（ログ表示の完了を待つ）
-                    setTimeout(() => {
-                        document.getElementById('command-panel').style.display = 'block';
-                    }, data.logs.length * 100);
-                }
-
-            } catch (e) {
-                console.error("通信エラー", e);
-            }
-        }
 
 
         /**
@@ -414,12 +465,17 @@
                 const data = await response.json();
 
                 // データ受信後、ステータスUIを更新
-        updateStatus(data.partyStatus, data.enemyStatus);
+                updateStatus(data.partyStatus, data.enemyStatus);
                 
+                // ▼▼▼ 追加：敵の画像を新しいものに差し替える ▼▼▼
+                document.getElementById('enemy-img').src = `/images/enemy_${data.enemyKey}.png`;
+
+                currentPartyStatus = data.partyStatus; // 現在のステータスを保持
+
                 // ログ描画後にコマンドパネルを再表示
                 appendLogs(data.logs);
                 setTimeout(() => {
-                    document.getElementById('command-panel').style.display = 'block';
+                    startCommandInput();
                 }, data.logs.length * 100);
 
             } catch (e) {
@@ -471,7 +527,7 @@
                 document.getElementById('memberB-mp').innerText = partyStatus[2].mp;
                 document.getElementById('memberB-maxmp').innerText = partyStatus[2].maxMp;
                 document.getElementById('memberB-atk').innerText = partyStatus[2].attackPower;
-            }
+                            }
 
             // ▼ 敵のステータス反映（追加処理） ▼
             if (enemyStatus) {

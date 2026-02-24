@@ -72,15 +72,21 @@ public Map<String, Object> initBattle(
 }
 
     // 2. コマンドの実行（セッションからデータを読み込んでターンを進める）
+    // 変更前: @RequestParam String action
+    // 変更後: @RequestParam List<String> actions
     @GetMapping("/battle/command")
-    public Map<String, Object> executeCommand(@RequestParam String action, HttpSession session) {
+    public Map<String, Object> executeCommand(@RequestParam List<String> actions, HttpSession session) {
         // セッションからデータを取り出す
+        @SuppressWarnings("unchecked")
         List<Player> party = (List<Player>) session.getAttribute("party");
         Enemy enemy = (Enemy) session.getAttribute("enemy");
         Integer turn = (Integer) session.getAttribute("turn");
 
         BattleManager manager = new BattleManager();
-        manager.executeTurn(party, enemy, action, turn);
+        // 変更: actionsリストをそのままBattleManagerに渡す
+        manager.executeTurn(party, enemy, actions, turn);
+
+        // ... 以下、既存のターン数保存や終了判定などのコードはそのまま
 
         // ターン数を進めて保存
         session.setAttribute("turn", turn + 1);
@@ -157,6 +163,8 @@ if (isGameOver) {
         enemyStatus.put("attackPower", enemy.getAttackPower());
         // レスポンスに追加
         response.put("enemyStatus", enemyStatus);
+
+        response.put("enemyKey", enemy.getClass().getSimpleName().toLowerCase());
 
         // フロントエンドに最新のステータス情報を渡す
         response.put("partyStatus", getPartyStatus(party));
