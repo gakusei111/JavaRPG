@@ -48,15 +48,24 @@ public class BattleManager {
             }
         }
 
-        // 2. 敵の行動
+// 2. 敵の行動
         if (enemy.isAlive()) {
-            Player target = getRandomAliveMember(party);
-            if (target != null) {
-                ActionResult enemyResult = enemy.attack(target);
-                addLog(enemyResult.getFullLog());
-                
-                if (!target.isAlive()) {
-                    addLog(target.getName() + " (" + target.getJobName() + ") は倒れた...");
+            // 攻撃前の生存状態を記録
+            List<Player> previouslyAlive = new ArrayList<>();
+            for (Player p : party) {
+                if (p.isAlive()) previouslyAlive.add(p);
+            }
+
+            // 敵自身のロジックに行動を委譲（単体・全体攻撃を自動処理）
+            List<ActionResult> enemyResults = enemy.performAction(party);
+            for (ActionResult res : enemyResults) {
+                addLog(res.getFullLog());
+            }
+            
+            // 死亡判定（このターンの敵の攻撃で新たに死亡したキャラクターを抽出）
+            for (Player p : previouslyAlive) {
+                if (!p.isAlive()) {
+                    addLog(p.getName() + " (" + p.getJobName() + ") は倒れた...");
                 }
             }
         }
