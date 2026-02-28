@@ -10,20 +10,18 @@
             color: #fff; 
             font-family: 'Verdana', sans-serif; 
             margin: 0;
-            /* 初期状態：画面ど真ん中に要素を置く設定 */
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            overflow: hidden; /* セットアップ中はスクロール禁止 */
+            overflow: hidden;
             transition: all 0.5s ease;
         }
 
-        /* === 戦闘モード用のボディ設定（JSで付与） === */
         body.battle-mode {
-            display: block; /* 中央揃え解除 */
+            display: block;
             padding: 40px;
-            overflow-y: auto; /* スクロール解禁 */
+            overflow-y: auto;
             height: auto;
             text-align: center;
         }
@@ -41,7 +39,6 @@
         }
         .active { display: block; }
 
-        /* === 入力フォームのデザイン === */
         h2 { color: #ffcc00; margin-bottom: 20px; }
         p { color: #aaa; margin-bottom: 30px; }
         label { display: block; text-align: left; margin-bottom: 8px; font-weight: bold; }
@@ -52,7 +49,6 @@
             font-size: 16px; box-sizing: border-box;
         }
 
-        /* === ボタン === */
         button {
             background-color: #007bff; color: white; border: none;
             padding: 15px 0; width: 100%; font-size: 18px;
@@ -62,27 +58,27 @@
         .btn-battle { background-color: #d62828; }
         .btn-battle:hover { background-color: #a01d1d; }
 
-        /* === ステージ4（戦闘＆履歴画面）のデザイン === */
+        /* === ステージ4（戦闘画面）のデザイン === */
         #stage-4 {
             display: none;
             max-width: 800px;
-            margin: 0 auto; /* 横幅いっぱいにならず中央に寄せる */
+            margin: 0 auto;
         }
 
-        /* ログウィンドウ */
-        /* ログウィンドウ */
-#log-window {
-    background: #000;
-    border: 4px double #fff;
-    border-radius: 8px;
-    height: 200px; /* ★ここを 300px から 200px や 150px など小さい数値に変更する */
-    padding: 20px;
-    overflow-y: scroll;
-    /* ...その他の設定はそのまま... */
-}
+        #log-window {
+            background: #000;
+            border: 4px double #fff;
+            border-radius: 8px;
+            height: 200px;
+            padding: 20px;
+            overflow-y: scroll;
+            text-align: left;
+            font-family: 'Courier New', monospace;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
+            margin-bottom: 30px;
+        }
         .log-entry { margin-bottom: 5px; border-bottom: 1px dashed #333; }
 
-        /* 履歴リストのデザイン */
         #history-section {
             background: #2d2d38;
             padding: 20px;
@@ -90,80 +86,78 @@
             border: 1px solid #444;
             text-align: left;
         }
-        #history-list {
-            list-style: none;
-            padding: 0;
-        }
-        #history-list li {
-            padding: 10px;
-            border-bottom: 1px solid #444;
-        }
+        #history-list { list-style: none; padding: 0; }
+        #history-list li { padding: 10px; border-bottom: 1px solid #444; }
 
-        /* アニメーション */
         @keyframes slideIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* バトルビュー全体のコンテナ */
-#battle-view {
-    background: #1a1a1a;
-    border: 2px solid #444;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 30px;
-}
+        /* === バトルビュー（画像表示エリア） === */
+        #battle-view {
+            background: #1a1a1a;
+            border: 2px solid #444;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
 
-/* 敵の配置（中央） */
-.enemy-side img {
-    width: 160px; /* 64pxを2.5倍に拡大 */
-    height: 160px;
-    image-rendering: pixelated; /* ドットをくっきりさせる魔法のプロパティ */
-}
+        .enemy-side img {
+            width: 160px;
+            height: 160px;
+            image-rendering: pixelated;
+        }
 
-/* 味方の配置（横並び） */
-.player-side {
-    display: flex;
-    justify-content: space-around;
-    width: 100%;
-}
+        .player-side {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+        }
 
-.char-box { text-align: center; font-size: 12px; color: #aaa; }
-.char-box img {
-    width: 100px; /* 64pxを約1.5倍に拡大 */
-    height: 100px;
-    image-rendering: pixelated;
-}
+        .char-box { text-align: center; font-size: 12px; color: #aaa; }
+        .char-box img {
+            width: 100px;
+            height: 100px;
+            image-rendering: pixelated;
+        }
 
-/* ステータス表示用のデザイン */
-.status-box {
-    text-align: left;
-    background: rgba(0, 0, 0, 0.6);
-    border: 1px solid #555;
-    border-radius: 4px;
-    padding: 5px 8px;
-    margin-top: 5px;
-    font-size: 11px;
-    color: #ddd;
-    line-height: 1.4;
-    font-family: monospace;
-}
-.status-name {
-    margin: 5px 0;
-    font-weight: bold;
-    color: #fff;
-    font-size: 14px;
-}
-
+        /* === ステータス表示用のデザイン === */
+        .status-box {
+            text-align: left;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #555;
+            border-radius: 4px;
+            padding: 5px 8px;
+            margin-top: 5px;
+            font-size: 11px;
+            color: #ddd;
+            line-height: 1.4;
+            font-family: monospace;
+        }
+        .status-name {
+            margin: 5px 0;
+            font-weight: bold;
+            color: #fff;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
 
-    <div id="stage-1" class="stage-card active">
+    <div id="stage-0" class="stage-card active">
+        <h2>モード選択</h2>
+        <p>プレイするモードを選択してください。</p>
+        
+        <button onclick="selectMode('story')" style="margin-bottom: 20px; background-color: #28a745;">ストーリーモード</button>
+        <button onclick="selectMode('annihilation')" style="background-color: #dc3545;">殲滅モード</button>
+    </div>
+
+    <div id="stage-1" class="stage-card" style="display: none;">
         <h2>キャラクター作成</h2>
         <p>あなたの分身となる英雄を作成します。</p>
         
@@ -206,7 +200,14 @@
             <option value="Healer" selected>ヒーラー</option>
             <option value="Knight">騎士</option>
         </select>
-        <button class="btn-battle" onclick="startAdventure()">冒険に出る！ ⚔️</button>
+        <button onclick="nextStage(3, 'type-select')">次へ</button>
+    </div>
+
+    <div id="stage-type-select" class="stage-card">
+        <h2>戦闘形式を選択</h2>
+        <p>殲滅モードの形式を選んでください。</p>
+        <button onclick="selectAnnihilationType('single')" style="margin-bottom: 20px; background-color: #007bff;">単体戦</button>
+        <button onclick="selectAnnihilationType('consecutive')" style="background-color: #6f42c1;">連戦</button>
     </div>
 
     <div id="stage-4">
@@ -220,37 +221,37 @@
                     HP: <span id="enemy-hp">-</span> / <span id="enemy-maxhp">-</span><br>
                     ATK: <span id="enemy-atk">-</span>
                 </div>
-                </div>
+            </div>
             
             <div class="player-side">
-            <div class="char-box">
-                <img id="hero-img" src="" alt="Hero">
-                <p id="hero-name" class="status-name">主人公</p>
-                <div class="status-box">
-                    HP: <span id="hero-hp">-</span> / <span id="hero-maxhp">-</span><br>
-                    MP: <span id="hero-mp">-</span> / <span id="hero-maxmp">-</span><br>
-                    ATK: <span id="hero-atk">-</span>
+                <div class="char-box">
+                    <img id="hero-img" src="" alt="Hero">
+                    <p id="hero-name" class="status-name">主人公</p>
+                    <div class="status-box">
+                        HP: <span id="hero-hp">-</span> / <span id="hero-maxhp">-</span><br>
+                        MP: <span id="hero-mp">-</span> / <span id="hero-maxmp">-</span><br>
+                        ATK: <span id="hero-atk">-</span>
+                    </div>
+                </div>
+                <div class="char-box">
+                    <img id="memberA-img" src="" alt="Member A">
+                    <p id="memberA-name" class="status-name">仲間A</p>
+                    <div class="status-box">
+                        HP: <span id="memberA-hp">-</span> / <span id="memberA-maxhp">-</span><br>
+                        MP: <span id="memberA-mp">-</span> / <span id="memberA-maxmp">-</span><br>
+                        ATK: <span id="memberA-atk">-</span>
+                    </div>
+                </div>
+                <div class="char-box">
+                    <img id="memberB-img" src="" alt="Member B">
+                    <p id="memberB-name" class="status-name">仲間B</p>
+                    <div class="status-box">
+                        HP: <span id="memberB-hp">-</span> / <span id="memberB-maxhp">-</span><br>
+                        MP: <span id="memberB-mp">-</span> / <span id="memberB-maxmp">-</span><br>
+                        ATK: <span id="memberB-atk">-</span>
+                    </div>
                 </div>
             </div>
-            <div class="char-box">
-                <img id="memberA-img" src="" alt="Member A">
-                <p id="memberA-name" class="status-name">仲間A</p>
-                <div class="status-box">
-                    HP: <span id="memberA-hp">-</span> / <span id="memberA-maxhp">-</span><br>
-                    MP: <span id="memberA-mp">-</span> / <span id="memberA-maxmp">-</span><br>
-                    ATK: <span id="memberA-atk">-</span>
-                </div>
-            </div>
-            <div class="char-box">
-                <img id="memberB-img" src="" alt="Member B">
-                <p id="memberB-name" class="status-name">仲間B</p>
-                <div class="status-box">
-                    HP: <span id="memberB-hp">-</span> / <span id="memberB-maxhp">-</span><br>
-                    MP: <span id="memberB-mp">-</span> / <span id="memberB-maxmp">-</span><br>
-                    ATK: <span id="memberB-atk">-</span>
-                </div>
-            </div>
-        </div>
         </div>
 
         <div id="log-window">
@@ -264,7 +265,7 @@
         </div>
 
         <div id="result-actions" style="display: none; margin-bottom: 20px;">
-            <button onclick="restartSameParty()" style="width: 48%; display: inline-block; background-color: #28a745;">同じパーティーで進む</button>
+            <button onclick="restartSameParty()" style="width: 48%; display: inline-block; background-color: #28a745;">もう一度遊ぶ</button>
             <button onclick="location.reload()" style="width: 48%; display: inline-block; background-color: #dc3545;">最初から遊ぶ</button>
         </div>
 
@@ -279,118 +280,79 @@
         </div>
     </div>
 
-
-
     <script>
-
-        // --- ターン制御用ステート ---
+// --- ゲーム進行用ステート ---
+        let currentGameMode = ""; // 'story' または 'annihilation'
+        let currentAnnihilationType = ""; // 'single' または 'consecutive'
         let currentPartyStatus = [];
         let pendingCommands = [];
         let currentInputIndex = 0;
 
         /**
-         * ターンのコマンド入力フェーズを開始する
+         * モード選択処理
          */
-        function startCommandInput() {
-            pendingCommands = [];
-            currentInputIndex = 0;
-            askNextCommand();
+        function selectMode(mode) {
+            currentGameMode = mode;
+            
+            if (mode === 'story') {
+                alert("ストーリーモードは現在開発中です。");
+                return;
+            }
+
+            // 殲滅モードが選ばれた場合、ステージ1へ進む
+            document.getElementById('stage-0').classList.remove('active');
+            document.getElementById('stage-0').style.display = 'none';
+            
+            const nextEl = document.getElementById('stage-1');
+            nextEl.style.display = 'block';
+            nextEl.classList.add('active');
         }
 
         /**
-         * 次のキャラクターの入力を促す、または全員終わっていれば送信する
+         * 殲滅モードの戦闘形式（単体/連戦）選択処理
          */
-        function askNextCommand() {
-            // HPが0以下のキャラクターは自動的にスキップ（ダミーコマンドを挿入）
-            while (currentInputIndex < 3 && currentPartyStatus[currentInputIndex].hp <= 0) {
-                pendingCommands.push('attack');
-                currentInputIndex++;
+        function selectAnnihilationType(type) {
+            currentAnnihilationType = type;
+
+            if (type === 'consecutive') {
+                alert("連戦モードは次回開発予定です。");
+                return;
             }
 
-            if (currentInputIndex >= 3) {
-                // 全員の入力が完了したらバックエンドへ送信
-                executeBatchCommands();
-            } else {
-                // 入力UIの表示更新
-                document.getElementById('command-target-name').innerText = currentPartyStatus[currentInputIndex].name + " の行動を選択";
-                document.getElementById('command-panel').style.display = 'block';
-            }
+            // 単体戦が選ばれた場合は戦闘開始処理へ進む
+            startAdventure();
         }
 
         /**
-         * ボタン押下時にコマンドを記録し、次の処理へ進む
+         * 名前のバリデーション
          */
-        function registerCommand(action) {
-            document.getElementById('command-panel').style.display = 'none';
-            pendingCommands.push(action);
-            currentInputIndex++;
-            askNextCommand();
-        }
-
-        /**
-         * 収集した全員分のコマンドをサーバーに送信してターンを実行する
-         */
-        async function executeBatchCommands() {
-            const query = `actions=${pendingCommands.join(',')}`;
-            try {
-                const response = await fetch(`/api/battle/command?${query}`);
-                const data = await response.json(); 
-
-                // ステータスと最新状態の保存
-                updateStatus(data.partyStatus, data.enemyStatus);
-                currentPartyStatus = data.partyStatus; 
-                appendLogs(data.logs);
-
-                // ゲーム終了判定
-                if (data.isGameOver) {
-                    document.getElementById('result-actions').style.display = 'block';
-                    setTimeout(loadHistory, data.logs.length * 100 + 500);
-                } else {
-                    // ログの表示完了を待ってから次のターンの入力へ
-                    setTimeout(() => {
-                        startCommandInput();
-                    }, data.logs.length * 100);
-                }
-            } catch (e) {
-                console.error("通信エラー", e);
-            }
-        }
-
-
-        // === 名前のバリデーション ===
         function validateHeroName() {
             const nameInput = document.getElementById('heroName');
-            const name = nameInput.value.trim(); // 空白を削除して文字数を確認
+            const name = nameInput.value.trim();
             const errorMsg = document.getElementById('error-message');
 
-            // 1. 空文字（0文字）チェック
             if (name.length === 0) {
-                errorMsg.innerText = "⚠ 名前を入力してください！";
+                errorMsg.innerText = "名前を入力してください。";
                 errorMsg.style.display = 'block';
-                // アニメーションでプルプルさせる演出（おまけ）
                 nameInput.style.borderColor = "#ff4444";
-                return; // ここで処理を止める（次へ行かせない）
+                return;
             }
 
-            // 2. 文字数オーバーチェック
             if (name.length > 12) {
-                errorMsg.innerText = "⚠ 名前は12文字以内で入力してください！";
+                errorMsg.innerText = "名前は12文字以内で入力してください。";
                 errorMsg.style.display = 'block';
                 nameInput.style.borderColor = "#ff4444";
-                return; // ここで処理を止める
+                return;
             }
 
-            // --- チェックOKの場合 ---
-            
-            // エラーを消す
             errorMsg.style.display = 'none';
-            nameInput.style.borderColor = "#444"; // 枠線を戻す
-            
-            // 次のステージへ進む
+            nameInput.style.borderColor = "#444";
             nextStage(1, 2);
         }
 
-        // === ステージ切り替え ===
+        /**
+         * ステージ切り替え
+         */
         function nextStage(current, next) {
             document.getElementById('stage-' + current).classList.remove('active');
             document.getElementById('stage-' + current).style.display = 'none';
@@ -402,12 +364,14 @@
 
         /**
          * 冒険開始（初期化）処理
-         * UIを戦闘モードに切り替え、サーバーから初期状態を取得して描画する。
          */
         async function startAdventure() {
             document.body.classList.add('battle-mode');
-            document.getElementById('stage-3').style.display = 'none';
+            // 変更：非表示にする対象を stage-3 から stage-type-select に変更
+            document.getElementById('stage-type-select').style.display = 'none';
             document.getElementById('stage-4').style.display = 'block';
+
+            // ...（以降の startAdventure 関数の内容は変更なし）
 
             const name = document.getElementById('heroName').value;
             const job1 = document.getElementById('heroJob').value;
@@ -418,26 +382,18 @@
             logWindow.innerHTML = `<div class="log-entry" style="color:#ffff00">パーティー結成: ${name}(${job1}), 仲間A(${job2}), 仲間B(${job3})</div>`;
 
             try {
-                // APIリクエスト（1回のみ実行）
                 const response = await fetch(`/api/battle/init?name=${name}&job1=${job1}&job2=${job2}&job3=${job3}`);
                 const data = await response.json();
 
-                // データ受信後、ステータスUIを更新
                 updateStatus(data.partyStatus, data.enemyStatus);
 
-                // 画像のソースを動的に生成して適用
                 document.getElementById('enemy-img').src = `/images/enemy_${data.enemyKey}.png`;
                 document.getElementById('hero-img').src = `/images/player_${data.heroKey.toLowerCase()}.png`;
                 document.getElementById('memberA-img').src = `/images/player_${data.memberAKey.toLowerCase()}.png`;
                 document.getElementById('memberB-img').src = `/images/player_${data.memberBKey.toLowerCase()}.png`;
 
-                // 現在のステータスを保持（順番入力フェーズ用）
                 currentPartyStatus = data.partyStatus;
-
-                // ログの描画
                 appendLogs(data.logs);
-                
-                // 入力フェーズ開始関数を呼ぶ
                 startCommandInput();
 
             } catch (e) {
@@ -446,33 +402,23 @@
             }
         }
 
-
-
-
         /**
          * 同一パーティーでの戦闘再開処理
-         * バックエンドの初期化APIを叩き、UIを戦闘用の状態にリセットする。
          */
         async function restartSameParty() {
             document.getElementById('result-actions').style.display = 'none';
             const logWindow = document.getElementById('log-window');
             
-            // DOMの肥大化を防ぐため既存のログをクリア
             logWindow.innerHTML = '<div class="log-entry" style="color:#aaaaaa;">新しい戦闘を準備中...</div>';
 
             try {
                 const response = await fetch('/api/battle/restart');
                 const data = await response.json();
 
-                // データ受信後、ステータスUIを更新
                 updateStatus(data.partyStatus, data.enemyStatus);
-                
-                // ▼▼▼ 追加：敵の画像を新しいものに差し替える ▼▼▼
                 document.getElementById('enemy-img').src = `/images/enemy_${data.enemyKey}.png`;
 
-                currentPartyStatus = data.partyStatus; // 現在のステータスを保持
-
-                // ログ描画後にコマンドパネルを再表示
+                currentPartyStatus = data.partyStatus;
                 appendLogs(data.logs);
                 setTimeout(() => {
                     startCommandInput();
@@ -484,7 +430,71 @@
             }
         }
 
-        // ログを画面に追加する共通関数
+        /**
+         * コマンド入力の開始
+         */
+        function startCommandInput() {
+            pendingCommands = [];
+            currentInputIndex = 0;
+            askNextCommand();
+        }
+
+        /**
+         * 順番にコマンドを要求する
+         */
+        function askNextCommand() {
+            while (currentInputIndex < 3 && currentPartyStatus[currentInputIndex].hp <= 0) {
+                pendingCommands.push('attack');
+                currentInputIndex++;
+            }
+
+            if (currentInputIndex >= 3) {
+                executeBatchCommands();
+            } else {
+                document.getElementById('command-target-name').innerText = currentPartyStatus[currentInputIndex].name + " の行動を選択";
+                document.getElementById('command-panel').style.display = 'block';
+            }
+        }
+
+        /**
+         * コマンドの記録
+         */
+        function registerCommand(action) {
+            document.getElementById('command-panel').style.display = 'none';
+            pendingCommands.push(action);
+            currentInputIndex++;
+            askNextCommand();
+        }
+
+        /**
+         * ターン実行（バッチ送信）
+         */
+        async function executeBatchCommands() {
+            const query = `actions=${pendingCommands.join(',')}`;
+            try {
+                const response = await fetch(`/api/battle/command?${query}`);
+                const data = await response.json(); 
+
+                updateStatus(data.partyStatus, data.enemyStatus);
+                currentPartyStatus = data.partyStatus; 
+                appendLogs(data.logs);
+
+                if (data.isGameOver) {
+                    document.getElementById('result-actions').style.display = 'block';
+                    setTimeout(loadHistory, data.logs.length * 100 + 500);
+                } else {
+                    setTimeout(() => {
+                        startCommandInput();
+                    }, data.logs.length * 100);
+                }
+            } catch (e) {
+                console.error("通信エラー", e);
+            }
+        }
+
+        /**
+         * ログ描画
+         */
         function appendLogs(logs) {
             const logWindow = document.getElementById('log-window');
             logs.forEach((log, i) => {
@@ -499,37 +509,32 @@
         }
 
         /**
-         * パーティーと敵のステータス表示を更新する関数
-         * @param {Array} partyStatus - 味方3人のステータス配列
-         * @param {Object} enemyStatus - 敵1体のステータスオブジェクト
+         * ステータスUIの更新
          */
         function updateStatus(partyStatus, enemyStatus) {
-            // ▼ 味方のステータス反映（既存処理） ▼
             if (partyStatus && partyStatus.length >= 3) {
-                // 主人公
                 document.getElementById('hero-name').innerText = partyStatus[0].name;
                 document.getElementById('hero-hp').innerText = partyStatus[0].hp;
                 document.getElementById('hero-maxhp').innerText = partyStatus[0].maxHp;
                 document.getElementById('hero-mp').innerText = partyStatus[0].mp;
                 document.getElementById('hero-maxmp').innerText = partyStatus[0].maxMp;
                 document.getElementById('hero-atk').innerText = partyStatus[0].attackPower;
-                // 仲間A
+
                 document.getElementById('memberA-name').innerText = partyStatus[1].name;
                 document.getElementById('memberA-hp').innerText = partyStatus[1].hp;
                 document.getElementById('memberA-maxhp').innerText = partyStatus[1].maxHp;
                 document.getElementById('memberA-mp').innerText = partyStatus[1].mp;
                 document.getElementById('memberA-maxmp').innerText = partyStatus[1].maxMp;
                 document.getElementById('memberA-atk').innerText = partyStatus[1].attackPower;
-                // 仲間B
+
                 document.getElementById('memberB-name').innerText = partyStatus[2].name;
                 document.getElementById('memberB-hp').innerText = partyStatus[2].hp;
                 document.getElementById('memberB-maxhp').innerText = partyStatus[2].maxHp;
                 document.getElementById('memberB-mp').innerText = partyStatus[2].mp;
                 document.getElementById('memberB-maxmp').innerText = partyStatus[2].maxMp;
                 document.getElementById('memberB-atk').innerText = partyStatus[2].attackPower;
-                            }
+            }
 
-            // ▼ 敵のステータス反映（追加処理） ▼
             if (enemyStatus) {
                 document.getElementById('enemy-name').innerText = enemyStatus.name;
                 document.getElementById('enemy-hp').innerText = enemyStatus.hp;
@@ -538,8 +543,9 @@
             }
         }
 
-
-        // === 履歴読み込み機能（復活） ===
+        /**
+         * 履歴読み込み
+         */
         async function loadHistory() {
             const list = document.getElementById('history-list');
             list.innerHTML = "<li style='color:#888'>読み込み中...</li>";
@@ -547,13 +553,12 @@
             try {
                 const response = await fetch('/api/history');
                 const history = await response.json();
-                list.innerHTML = ""; // クリア
+                list.innerHTML = "";
 
-                // 最新の5件を表示
                 history.reverse().slice(0, 5).forEach(item => {
                     const li = document.createElement('li');
                     const date = new Date(item.createdAt).toLocaleString();
-                    const isWin = item.winner !== item.enemyName; // 勝者が敵じゃなければ勝ち
+                    const isWin = item.winner !== item.enemyName;
                     
                     li.innerHTML = `
                         <span style="font-size:12px; color:#888;">[${date}]</span><br>
